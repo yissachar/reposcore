@@ -1,7 +1,7 @@
 Repo Score
 =========
 
-A webapp for calculating the score for a Github repository.
+A webapp for calculating the score for a Github repository: http://reposcore.appspot.com/
 
 The strength of a Github repository can be calculated from several different factors, 
 including how recently the repository has been updated, how many people contribute to the repository, 
