@@ -1,0 +1,180 @@
+<link rel="import" href="packages/polymer/polymer.html">
+
+<polymer-element name="score-card">
+  <template>
+
+    <style>
+      #container {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      #title {
+        width: 100%;
+        font-weight: 300;
+        font-size: 26px;
+        padding: 30px 0;
+        color: #fff;
+        background-color: #C296D6;
+        text-align: center;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+      }
+
+      #searchPrompt {
+        margin-left: 5px;
+        margin-bottom: 10px;
+      }
+
+      #searchBox {
+        width: 400px;
+        height: 28px;
+        font-size: 16px;
+        padding: 5px 15px;
+        border-radius: 10px;
+        border: 1px solid #bbb;
+        margin-bottom: 15px;
+      }
+
+      #searchBox:focus {
+        border-color: #C296D6;
+        outline: none;
+      }
+
+      #searchButton {
+        padding: 10px;
+        color: #fff;
+        background-color: #C296D6;
+        border-radius: 50%;
+        border: 0px solid #fff;
+      }
+
+      #searchButton:focus {
+        outline: none;
+      }
+
+      #descriptionContainer {
+        max-width: 400px;
+      }
+
+      #repoName {
+        font-size: 30px;
+        margin-bottom: 20px;
+      }
+
+      #userDetails {
+        display: flex;
+        align-items: center;
+      }
+
+      #userLink {
+        font-size: 24px;
+        margin-left: 10px;
+        color: #444;
+        text-decoration: none;
+      }
+
+      #description {
+        line-height: 24px;
+        margin-top: 10px;
+      }
+
+      #summaryContainer {
+        display: flex;
+        align-items: center;
+        margin: 20px;
+      }
+
+      #totalScoreContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-left: 35px;
+        padding: 20px;
+        border-radius: 5px;
+      }
+
+      #totalScore {
+        font-size: 30px;
+        margin-bottom: 15px;
+      }
+
+      #criterion {
+        border-collapse: collapse;
+      }
+
+      .Excellent {
+        background-color: rgba(53, 219, 72, 0.4);
+      }
+
+      .Good {
+        background-color: rgba(124, 227, 84, 0.4);
+      }
+
+      .Decent {
+        background-color: rgba(215, 227, 84, 0.5);
+      }
+
+      .Bad {
+        background-color: rgba(230, 191 ,64,0.5);
+      }
+
+      .Fail {
+        background-color: rgba(230, 92, 64, 0.4);
+      }
+
+      #criterion td {
+        padding: 13px;
+      }
+    </style>
+
+    <div id="container">
+      <div id ="title">Repo Scorecard</div>
+
+      <div>
+        <div id="searchPrompt">Enter a Github repository URL:</div>
+        <input id="searchBox" type="text" value="{{repo}}" on-keyup="{{handleKeyUp}}">
+        <button id="searchButton" on-click="{{processRepo}}">GO</button><br>
+      </div>
+
+      <template if="{{repoFound}}">
+        <div id="summaryContainer">
+          <div id="descriptionContainer">
+            <div id="repoName">{{repoName}}</div>
+            <div id="userDetails">
+              <img width="40px" height="40px" src="{{userAvatar}}&amp;s=40"/>
+              <a id="userLink" href="https://github.com/{{user}}">@{{user}}</a>
+            </div>
+            <div id="description">{{description}}</div>
+          </div>
+          <div id="totalScoreContainer" class="{{totalCriteria.scoreClass}}">
+            <div id="totalScore">{{totalCriteria.score}}/{{totalCriteria.maxScore}}</div>
+            <div id="totalScoreDescription">{{totalCriteria.scoreClass}}</div>
+          </div>
+        </div>
+
+        <table id="criterion">
+          <tr>
+            <th>Criteria</th>
+            <th>Value</th>
+            <th>Score</th>
+          </tr>
+          <tr template repeat="{{criteria in criterion}}" class="{{criteria.scoreClass}}">
+            <td>{{criteria.name}}</td>
+            <td>{{criteria.prettyValue}}</td>
+            <td>{{criteria.score}}/{{criteria.maxScore}}</td>
+          </tr>
+        </table>
+      </template>
+
+      <template if="{{!repoFound && searchedForRepo}}">
+        <div>Oops! Couldn't find a repository for that URL.</div>
+      </template>
+
+    </div>
+
+  </template>
+  <script type="application/dart" src="scorecard.dart"></script>
+</polymer-element>

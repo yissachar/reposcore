@@ -1,0 +1,10 @@
+name: repo_score
+description: An app for calculating the score of a Github repository
+dependencies:
+    polymer: ">=0.11.1 <0.13.0"
+    intl: ">=0.11.0 <0.12.0"
+    github: ">=0.5.2 <1.0.0"
+    crypto: any
+transformers:
+- polymer:
+    entry_points: web/repo_score.html
