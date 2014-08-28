@@ -11,6 +11,10 @@ body {
   flex-direction: column;
 }
 
+a {
+  color: #54ACD1;
+}
+
 .scoreCard {
   flex: 1;
 }
