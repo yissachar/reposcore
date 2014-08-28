@@ -6,4 +6,18 @@ body {
   line-height: 1.2em;
   margin: 0;
   color: #333;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.scoreCard {
+  flex: 1;
+}
+
+footer {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 14px;
 }
