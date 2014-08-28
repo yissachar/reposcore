@@ -92,7 +92,7 @@ class Scorecard extends PolymerElement {
 
       int ratioScore = closed > 0 ? getScore(open / closed, [0.05, 0.01], descending: true) : 0;
       int issueScore = getScore(open + closed, [1, 5, 10, 40, 90, 150]);
-      int totalScore = ratioScore > 0 ? issueScore + ((issueScore / 4) * ratioScore).round() : issueScore;
+      int totalScore = ratioScore > 0 ? issueScore + ((issueScore / 6) * ratioScore).round() : issueScore;
 
       criterion.add(new ScoreCriteria('Pull Requests', '$open open, $closed closed', totalScore, 8));
     }));
