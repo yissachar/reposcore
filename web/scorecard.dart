@@ -150,6 +150,7 @@ class Scorecard extends PolymerElement {
       criterion.forEach((e) => score += e.score);
       criterion.forEach((e) => maxScore += e.maxScore);
       totalCriteria = new ScoreCriteria('Total', 0, score, maxScore);
+      criterion.sort((a, b) => a.name.compareTo(b.name));
     });
   }
 
