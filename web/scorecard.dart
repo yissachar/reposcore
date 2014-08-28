@@ -74,10 +74,13 @@ class Scorecard extends PolymerElement {
 
     // Rank README file
     callApi(github.readme(repoSlug).then((file) {
-      criterion.add(new ScoreCriteria.fromSteps('Readme', file.size, [1, 500, 1800], 3, visibleValue: (value) => '$value bytes'));
+      var scoreMap = {1: 'Tiny', 500: 'Short', 1800: 'Long'};
+      var keys = scoreMap.keys.toList();
+      int score = getScore(file.size, keys);
+      criterion.add(new ScoreCriteria('Readme', scoreMap[keys[score-1]], score, 3));
     })
     .catchError((e) {
-      criterion.add(new ScoreCriteria('Readme', 0, 0, 3, visibleValue: (value) => 'None'));
+      criterion.add(new ScoreCriteria('Readme', 'None', 0, 3));
     }, test: (e) => e is NotFound));
 
     var openPR = getCount('$githubUrl/repos/$shortRepo/pulls?state=open&per_page=1');
@@ -86,9 +89,12 @@ class Scorecard extends PolymerElement {
     callApi(Future.wait([openPR, closedPR]).then((values) {
       int open = values[0];
       int closed = values[1];
-      // TODO: Figure out better score measure
-      int prScore = min((log(open + closed)).round(), 8);
-      criterion.add(new ScoreCriteria('Pull Requests', '$open open, $closed closed', prScore, 8));
+
+      int ratioScore = closed > 0 ? getScore(open / closed, [0.05, 0.01], descending: true) : 0;
+      int issueScore = getScore(open + closed, [1, 5, 10, 40, 90, 150]);
+      int totalScore = ratioScore > 0 ? issueScore + ((issueScore / 4) * ratioScore).round() : issueScore;
+
+      criterion.add(new ScoreCriteria('Pull Requests', '$open open, $closed closed', totalScore, 8));
     }));
 
     callApi(getCount('$githubUrl/repos/$shortRepo/contributors?per_page=1').then((count) {
@@ -101,10 +107,29 @@ class Scorecard extends PolymerElement {
     callApi(Future.wait([openIssues, closedIssues]).then((values) {
       int open = values[0];
       int closed = values[1];
-      // TODO: Figure out better score measure
-      int issueScore = min((log(open + closed)).round(), 6);
-      criterion.add(new ScoreCriteria('Issues', '$open open, $closed closed', issueScore, 6));
+
+      int ratioScore = closed > 0 ? getScore(open / closed, [0.3, 0.15], descending: true) : 0;
+      int issueScore = getScore(open + closed, [1, 5, 15, 50]);
+      int totalScore = ratioScore > 0 ? issueScore + ((issueScore / 4) * ratioScore).round() : issueScore;
+
+      criterion.add(new ScoreCriteria('Issues', '$open open, $closed closed', totalScore, 6));
     }));
+  }
+
+  int getScore(num value, List steps, {bool descending: false}) {
+    int score = 0;
+
+    if(descending) {
+      while(score < steps.length && value <= steps[score]) {
+        score++;
+      }
+    } else {
+      while(score < steps.length && value >= steps[score]) {
+        score++;
+      }
+    }
+
+    return score;
   }
 
   callApi(Future api) {
