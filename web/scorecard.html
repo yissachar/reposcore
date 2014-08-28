@@ -139,13 +139,13 @@
         <button id="searchButton" on-click="{{processRepo}}">GO</button><br>
       </div>
 
-      <template if="{{repoFound}}">
+      <template if="{{repoFound && !rateLimitHit}}">
         <div id="summaryContainer">
           <div id="descriptionContainer">
             <div id="repoName">{{repoName}}</div>
             <div id="userDetails">
-              <img width="40px" height="40px" src="{{userAvatar}}&amp;s=40"/>
-              <a id="userLink" href="https://github.com/{{user}}">@{{user}}</a>
+              <img width="40px" height="40px" _src="{{userAvatar}}&amp;s=40"/>
+              <a id="userLink" _href="https://github.com/{{user}}">@{{user}}</a>
             </div>
             <div id="description">{{description}}</div>
           </div>
@@ -169,8 +169,12 @@
         </table>
       </template>
 
-      <template if="{{!repoFound && searchedForRepo}}">
+      <template if="{{!repoFound && searchedForRepo && !rateLimitHit}}">
         <div>Oops! Couldn't find a repository for that URL.</div>
+      </template>
+
+      <template if="{{searchedForRepo && rateLimitHit}}">
+        <div>You've hit the Github API rate limit. Please try again at {{rateLimitReset}}</div>
       </template>
 
     </div>

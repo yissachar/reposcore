@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:polymer/polymer.dart';
 import 'package:github/browser.dart';
+import 'package:github/common.dart';
 
 part 'score_criteria.dart';
 
@@ -15,6 +16,8 @@ class Scorecard extends PolymerElement {
   final String githubUrl = 'https://api.github.com';
   @observable bool searchedForRepo;
   @observable bool repoFound;
+  @observable bool rateLimitHit;
+  @observable String rateLimitReset;
   @observable String repo;
   @observable String repoName;
   @observable String user;
@@ -51,7 +54,7 @@ class Scorecard extends PolymerElement {
     criterion.clear();
 
     // Rank forks, stargazers, watchers, and wiki
-    github.repository(repoSlug).then((Repository repo) {
+    callApi(github.repository(repoSlug).then((Repository repo) {
       repoFound = true;
       user = repo.owner.login;
       userAvatar = repo.owner.avatarUrl;
@@ -65,56 +68,64 @@ class Scorecard extends PolymerElement {
                             daysSinceUpdate < 60 ? 1 : 0;
       criterion.add(new ScoreCriteria('Last Updated', new DateFormat('MMM d, yyyy').format(repo.pushedAt), lastUpdateScore, 3));
       description = repo.description;
-      updateScore();
     })
-    .catchError((e) => repoFound = false)
-    .whenComplete(() => searchedForRepo = true);
+    .catchError((e) => repoFound = false, test: (e) => e is NotFound)
+    .whenComplete(() => searchedForRepo = true));
 
     // Rank README file
-    github.readme(repoSlug).then((file) {
+    callApi(github.readme(repoSlug).then((file) {
       criterion.add(new ScoreCriteria.fromSteps('Readme', file.size, [1, 500, 1800], 3, visibleValue: (value) => '$value bytes'));
-      updateScore();
-    }, onError: (e) {
+    })
+    .catchError((e) {
       criterion.add(new ScoreCriteria('Readme', 0, 0, 3, visibleValue: (value) => 'None'));
-      updateScore();
-    });
+    }, test: (e) => e is NotFound));
 
     var openPR = getCount('$githubUrl/repos/$shortRepo/pulls?state=open&per_page=1');
     var closedPR = getCount('$githubUrl/repos/$shortRepo/pulls?state=closed&per_page=1');
 
-    Future.wait([openPR, closedPR]).then((values) {
+    callApi(Future.wait([openPR, closedPR]).then((values) {
       int open = values[0];
       int closed = values[1];
       // TODO: Figure out better score measure
       int prScore = min((log(open + closed)).round(), 8);
       criterion.add(new ScoreCriteria('Pull Requests', '$open open, $closed closed', prScore, 8));
-      updateScore();
-    });
+    }));
 
-    getCount('$githubUrl/repos/$shortRepo/contributors?per_page=1').then((count) {
+    callApi(getCount('$githubUrl/repos/$shortRepo/contributors?per_page=1').then((count) {
       criterion.add(new ScoreCriteria.fromSteps('Contributors', count, [2, 3, 8, 15, 40], 5));
-      updateScore();
-    });
+    }));
 
     var openIssues = getCount('$githubUrl/repos/$shortRepo/issues?state=open&per_page=1');
     var closedIssues = getCount('$githubUrl/repos/$shortRepo/issues?state=closed&per_page=1');
 
-    Future.wait([openIssues, closedIssues]).then((values) {
+    callApi(Future.wait([openIssues, closedIssues]).then((values) {
       int open = values[0];
       int closed = values[1];
       // TODO: Figure out better score measure
       int issueScore = min((log(open + closed)).round(), 6);
       criterion.add(new ScoreCriteria('Issues', '$open open, $closed closed', issueScore, 6));
-      updateScore();
-    });
+    }));
   }
 
-  updateScore() {
-    int score = 0;
-    int maxScore = 0;
-    criterion.forEach((e) => score += e.score);
-    criterion.forEach((e) => maxScore += e.maxScore);
-    totalCriteria = new ScoreCriteria('Total', 0, score, maxScore);
+  callApi(Future api) {
+    rateLimitHit = false;
+
+    api.catchError((e) {
+        searchedForRepo = false;
+        github.rateLimit().then((rateLimit) {
+          rateLimitReset = new DateFormat('MMM d, yyyy hh:mm a').format(rateLimit.resets);
+          rateLimitHit = rateLimit.remaining == 0;
+          searchedForRepo = true;
+        });
+    })
+    .whenComplete(() {
+      // Update score
+      int score = 0;
+      int maxScore = 0;
+      criterion.forEach((e) => score += e.score);
+      criterion.forEach((e) => maxScore += e.maxScore);
+      totalCriteria = new ScoreCriteria('Total', 0, score, maxScore);
+    });
   }
 
   Future<int> getCount(String api) {
