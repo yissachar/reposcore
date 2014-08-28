@@ -23,19 +23,29 @@
         margin-bottom: 30px;
       }
 
+      #searchContainer {
+        width: 450px;
+        max-width: 95%;
+      }
+
       #searchPrompt {
         margin-left: 5px;
         margin-bottom: 10px;
       }
 
+      #searchBoxContainer {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
       #searchBox {
-        width: 400px;
         height: 28px;
         font-size: 16px;
         padding: 5px 15px;
         border-radius: 10px;
         border: 1px solid #bbb;
-        margin-bottom: 15px;
+        flex-grow: 1;
       }
 
       #searchBox:focus {
@@ -46,9 +56,12 @@
       #searchButton {
         padding: 10px;
         color: #fff;
+        width: 40px;
+        height: 40px;
         background-color: #C296D6;
         border-radius: 50%;
         border: 0px solid #fff;
+        margin-left: 10px;
       }
 
       #searchButton:focus {
@@ -128,15 +141,22 @@
       #criterion td {
         padding: 13px;
       }
+
+      .errorMessage {
+        padding: 0 6px;
+        text-align: center;
+      }
     </style>
 
     <div id="container">
       <div id ="title">Repo Scorecard</div>
 
-      <div>
+      <div id="searchContainer">
         <div id="searchPrompt">Enter a Github repository URL:</div>
-        <input id="searchBox" type="text" value="{{repo}}" on-keyup="{{handleKeyUp}}">
-        <button id="searchButton" on-click="{{processRepo}}">GO</button><br>
+        <div id="searchBoxContainer">
+          <input id="searchBox" type="text" value="{{repo}}" on-keyup="{{handleKeyUp}}">
+          <button id="searchButton" on-click="{{processRepo}}">GO</button><br>
+        </div>
       </div>
 
       <template if="{{repoFound && !rateLimitHit}}">
@@ -170,11 +190,11 @@
       </template>
 
       <template if="{{!repoFound && searchedForRepo && !rateLimitHit}}">
-        <div>Oops! Couldn't find a repository for that URL.</div>
+        <div class="errorMessage">Oops! Couldn't find a repository for that URL.</div>
       </template>
 
       <template if="{{searchedForRepo && rateLimitHit}}">
-        <div>You've hit the Github API rate limit. Please try again at {{rateLimitReset}}</div>
+        <div class="errorMessage">You've hit the Github API rate limit. Please try again at {{rateLimitReset}}</div>
       </template>
 
     </div>
